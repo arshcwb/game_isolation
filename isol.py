@@ -40,6 +40,15 @@ def collisions(bear,obstacle_list):
                 return False
     return True
         
+
+
+def player_animation():
+    global snowbear,snow_index
+    snow_index += 0.1
+    if snow_index >= len(snowbearlist): snow_index=0
+    snowbear=snowbearlist[int(snow_index)]
+
+
 pygame.init()
 pygame.display.set_caption("Isolation")
 
@@ -67,8 +76,19 @@ chhota_cactus=pygame.transform.scale(cactus,(150,100))
 bada_cactus=pygame.transform.scale(cactus,(200,150))
 bohot_chhota_cactus=pygame.transform.scale(cactus,(70,40))
 
-snowbear=pygame.image.load("images/character/snowbear1.png").convert_alpha()
-snowbear=pygame.transform.scale(snowbear,(100,70))
+snowbear1=pygame.image.load("images/character/snowbear1.png").convert_alpha()
+snowbear1=pygame.transform.scale(snowbear1,(100,70))
+snowbear2=pygame.image.load("images/character/snowbear2.png").convert_alpha()
+snowbear2=pygame.transform.scale(snowbear2,(100,70))
+snowbear3=pygame.image.load("images/character/snowbear3.png").convert_alpha()
+snowbear3=pygame.transform.scale(snowbear3,(100,70))
+snowbear4=pygame.image.load("images/character/snowbear4.png").convert_alpha()
+snowbear4=pygame.transform.scale(snowbear4,(100,70))
+
+snowbearlist=[snowbear1,snowbear2,snowbear3,snowbear4]
+snow_index=0
+snowbear=snowbearlist[snow_index]
+
 bear_rect=snowbear.get_rect(midbottom=(100,540))
 bear_gravity=0
 
@@ -95,7 +115,7 @@ instruction_rect1=instruction1.get_rect(center=(600,500))
 
 #Timer
 obstacle_timer = pygame.USEREVENT + 1
-pygame.time.set_timer(obstacle_timer,600)
+pygame.time.set_timer(obstacle_timer,900)
 
 
 
@@ -134,11 +154,12 @@ while True:
         # screen.blit(score,(score_rect))
         # camel_rect.left-=speed
         # screen.blit(camel,camel_rect)
+        point=score()
         screen.blit(chhota_cactus,(900,470))
         screen.blit(bada_cactus,(400,440))
         screen.blit(chhota_cactus,(100,470))
 
-        point=score()
+        
 
         obstacle_rect_list= obstacle_movement(obstacle_rect_list, speed = 10 )
         game_active=collisions(bear_rect,obstacle_rect_list)
@@ -153,7 +174,7 @@ while True:
         if bear_rect.bottom >540:
             bear_rect.bottom=540
 
-
+        player_animation()
         screen.blit(snowbear,bear_rect)
 
 
