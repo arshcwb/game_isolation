@@ -5,4 +5,6 @@ Space for small jump, up arrow for big jump.
 
 Beware, big jump takes time, while small jump can't cross two obstacles simultaneously 
 
-Game difficulty increases with 100,200,400 barrier, where obstacle speed increases first and slows down just in front of bear, creating an illusion.
+Game difficulty increases with 100,200,400 and 600 barrier, where obstacle speed increases first and slows down just in front of bear, creating an illusion.
+
+Used pygame, sys, sprite class (OOPS) and random for the game.

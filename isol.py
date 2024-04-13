@@ -1,7 +1,91 @@
 import pygame
 from sys import exit
 from random import randint
-from random import choices
+from random import choice,choices
+
+class Player(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        snowbear1=pygame.image.load("images/character/snowbear1.png").convert_alpha()
+        snowbear1=pygame.transform.scale(snowbear1,(100,70))
+        snowbear2=pygame.image.load("images/character/snowbear2.png").convert_alpha()
+        snowbear2=pygame.transform.scale(snowbear2,(100,70))
+        snowbear3=pygame.image.load("images/character/snowbear3.png").convert_alpha()
+        snowbear3=pygame.transform.scale(snowbear3,(100,70))
+        snowbear4=pygame.image.load("images/character/snowbear4.png").convert_alpha()
+        snowbear4=pygame.transform.scale(snowbear4,(100,70))
+
+        self.snowbearlist=[snowbear1,snowbear2,snowbear3,snowbear4]
+        self.snow_index=0
+
+        self.image = self.snowbearlist[self.snow_index]
+        self.rect = self.image.get_rect(midbottom = (100,540) )
+        self.gravity=0
+
+    def player_input(self):
+        if pygame.key.get_pressed()[pygame.K_SPACE] and self.rect.y >=400:
+            self.gravity = -17
+        if pygame.key.get_pressed()[pygame.K_UP] and self.rect.y >=400:
+            self.gravity=-29
+    def apply_gravity(self):
+        self.gravity += 1
+        self.rect.y += self.gravity
+        if self.rect.bottom >= 540:
+            self.rect.bottom = 540
+
+    def animation(self):
+        self.snow_index += 0.1
+        if self.snow_index >= len(self.snowbearlist):
+            self.snow_index=0
+        self.image=self.snowbearlist[int(self.snow_index)]
+
+    def update(self):
+            self.player_input()
+            self.apply_gravity()
+            self.animation()
+
+
+
+class Obstacle(pygame.sprite.Sprite):
+    def __init__(self,type):
+        super().__init__()
+        if type=="bat":
+            img=pygame.image.load("images/character/bat1.png").convert_alpha()
+            img=pygame.transform.scale(img,(50,50))
+            x_pos=randint(1100,1800)
+            y_pos = choice([250,400,400,400])
+        else:
+            img=pygame.image.load("images/character/cam.png").convert_alpha()
+            img=pygame.transform.scale(img,(100,70))
+            x_pos=1200
+            y_pos=540
+
+        
+        self.image=img
+        self.rect=self.image.get_rect(midbottom=(x_pos,y_pos))
+    def update(self):
+        speed=10
+        if self.rect.x>400:
+            if int(point/100)>100 and int(point/100)<200:
+                speed=15
+            if int(point/100)>200 and int(point/100)<400:
+                speed=20
+            if int(point/100)>400 and int(point/100)<600:
+                speed=25
+            if int(point/100)>600:
+                speed=35
+        self.rect.x -= speed
+        self.destroy()
+    def destroy (self):
+        if self.rect.x <= -100:
+            self.kill()
+    
+
+
+
+
+
+
 
 def score():
     time=pygame.time.get_ticks() - start_time
@@ -10,28 +94,28 @@ def score():
     screen.blit(score_surf,score_rect)
     return time
 
-def obstacle_movement(obstacle_list,speed=10):
-    if obstacle_list:
-        for obstacle_rect in obstacle_list:
-            if obstacle_rect.left > randint(400,600):
-                if int(point/100)>100 and int(point/100)<200:
-                    speed=15
-                if int(point/100)>200 and int(point/100) <400:
-                    speed=20
-                if int(point/100)>400:
-                    speed=25
-                    # speed=int(choices([2,30])[0])
+# def obstacle_movement(obstacle_list,speed=10):
+#     if obstacle_list:
+#         for obstacle_rect in obstacle_list:
+#             if obstacle_rect.left > randint(400,600):
+#                 if int(point/100)>100 and int(point/100)<200:
+#                     speed=15
+#                 if int(point/100)>200 and int(point/100) <400:
+#                     speed=20
+#                 if int(point/100)>400:
+#                     speed=25
+#                     # speed=int(choices([2,30])[0])
 
-            obstacle_rect.left -=speed
-            if obstacle_rect.bottom==540:
-                screen.blit(camel,obstacle_rect)
-            else:
-                screen.blit(bat,obstacle_rect)
+#             obstacle_rect.left -=speed
+#             if obstacle_rect.bottom==540:
+#                 screen.blit(camel,obstacle_rect)
+#             else:
+#                 screen.blit(bat,obstacle_rect)
             
-        obstacle_list=[obstacle for obstacle in obstacle_list if obstacle.x>-200]
-        return obstacle_list
-    else:
-        return []
+#         obstacle_list=[obstacle for obstacle in obstacle_list if obstacle.x>-200]
+#         return obstacle_list
+#     else:
+#         return []
 
 def collisions(bear,obstacle_list):
     if obstacle_list:
@@ -40,7 +124,11 @@ def collisions(bear,obstacle_list):
                 return False
     return True
         
-
+def collision_sprite():
+    if pygame.sprite.spritecollide(player.sprite,obstacle,False):
+        obstacle.empty()
+        return False
+    else: return True
 
 def player_animation():
     global snowbear,snow_index
@@ -57,12 +145,18 @@ screen = pygame.display.set_mode((1200,600)) #display surface
 clock = pygame.time.Clock()
 text=pygame.font.Font("fonts/pixeled/Pixeled.ttf",50)
 
-
+pygame.init()
 
 game_active=False
 start_time=0
 point=0
 highest_score = 0
+
+#GROUPS
+player = pygame.sprite.GroupSingle()
+player.add(Player())
+obstacle=pygame.sprite.Group()
+
 
 #surfaces
 mars_surface = pygame.image.load("images/bg/mars2.png").convert_alpha()
@@ -90,14 +184,14 @@ snow_index=0
 snowbear=snowbearlist[snow_index]
 
 bear_rect=snowbear.get_rect(midbottom=(100,540))
-bear_gravity=0
+# bear_gravity=0
 
 
-camel=pygame.image.load("images/character/cam.png").convert_alpha()
-camel=pygame.transform.scale(camel,(100,70))
+# camel=pygame.image.load("images/character/cam.png").convert_alpha()
+# camel=pygame.transform.scale(camel,(100,70))
 
-bat=pygame.image.load("images/character/bat1.png").convert_alpha()
-bat=pygame.transform.scale(bat,(50,50))
+# bat=pygame.image.load("images/character/bat1.png").convert_alpha()
+# bat=pygame.transform.scale(bat,(50,50))
 
 
 obstacle_rect_list=[]
@@ -138,10 +232,11 @@ while True:
                     start_time=pygame.time.get_ticks()
         
         if event.type==obstacle_timer and game_active:
-            if randint(0,1):
-                obstacle_rect_list.append(camel.get_rect(midbottom=(randint(1100,1100),540)))
-            else:
-                obstacle_rect_list.append(bat.get_rect(midbottom=(randint(1100,1800),choices([250,400],[1,3])[0])))
+            obstacle.add(Obstacle(choice(["camel","bat"])))
+            # if randint(0,1):
+            #     obstacle_rect_list.append(camel.get_rect(midbottom=(randint(1100,1100),540)))
+            # else:
+            #     obstacle_rect_list.append(bat.get_rect(midbottom=(randint(1100,1800),choices([250,400],[1,3])[0])))
 
 
 
@@ -161,27 +256,32 @@ while True:
 
         
 
-        obstacle_rect_list= obstacle_movement(obstacle_rect_list, speed = 10 )
-        game_active=collisions(bear_rect,obstacle_rect_list)
+        # obstacle_rect_list= obstacle_movement(obstacle_rect_list, speed = 10 )
+        # game_active=collisions(bear_rect,obstacle_rect_list)
 
 
-        bear_gravity += 1
-        bear_rect.y += bear_gravity
+        # bear_gravity += 1
+        # bear_rect.y += bear_gravity
         # if camel_rect.left<-100:
         #     camel_rect.left=1250
 
 
-        if bear_rect.bottom >540:
-            bear_rect.bottom=540
+        # if bear_rect.bottom >540:
+        #     bear_rect.bottom=540
 
-        player_animation()
-        screen.blit(snowbear,bear_rect)
+        # player_animation()
+        player.draw(screen)
+        player.update()
+        obstacle.draw(screen)
+        obstacle.update()
+
+        # screen.blit(snowbear,bear_rect)
 
 
         # if bear_rect.colliderect(camel_rect):
         #     game_active=False
         
-        
+        game_active=collision_sprite()
 
     else:
         screen.fill((71,71,71))
